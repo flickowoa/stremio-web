@@ -179,6 +179,10 @@ module.exports = (env, argv) => ({
         alias: {
             'stremio': path.resolve(__dirname, 'src'),
             'stremio-router': path.resolve(__dirname, 'src', 'router')
+        },
+        fallback: {
+            process: require.resolve('process/browser'),
+            buffer: require.resolve('buffer')
         }
     },
     devServer: {
@@ -218,6 +222,7 @@ module.exports = (env, argv) => ({
             COMMIT_HASH
         }),
         new webpack.ProvidePlugin({
+            process: 'process/browser',
             Buffer: ['buffer', 'Buffer']
         }),
         argv.mode === 'production' &&
