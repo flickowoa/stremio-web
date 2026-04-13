@@ -7,22 +7,29 @@
 
   outputs = { self, nixpkgs, ... }:
     let
-      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
-      makeShell = system: let
-        pkgs = import nixpkgs { inherit system; };
-      in pkgs.mkShell {
-        buildInputs = [
-          pkgs.nodejs-20_x
-          pkgs.pnpm
-          pkgs.git
-        ];
-        shellHook = ''
-          echo "Entering stremio-web dev shell with pnpm and Node.js 20"
-        '';
-      };
+      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      
+      # Helper to generate an attrset for each system
+      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
     in {
-      devShells = builtins.listToAttrs (map (system: {
-        name = system;
-        value = makeShell system;
-      }) systems);
+      devShells = forAllSystems (system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in {
+          # Define the 'default' shell for each system
+          default = pkgs.mkShell {
+            buildInputs = [
+              pkgs.nodejs_20
+              pkgs.nodePackages.pnpm # Recommended way to grab pnpm
+              pkgs.git
+            ];
+
+            shellHook = ''
+              echo "🚀 Entering stremio-web dev shell"
+              echo "Node version: $(node -v)"
+              echo "pnpm version: $(pnpm -v)"
+            '';
+          };
+        });
     };
+}
